@@ -20,5 +20,6 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPI
 soro1
 soro2
 soii
+soro1 # this shouldnt be here but for now it is necessary
 ros2 run ros1_bridge rosbag_converter_node --ros-args --params-file /home/mfc/projects/rosbag_converter_ws/src/ros1_bridge/params/test_param.yaml
 ```

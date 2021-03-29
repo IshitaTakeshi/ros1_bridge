@@ -40,6 +40,8 @@ if(NOT ros1_roscpp_FOUND)
 endif()
 
 find_ros1_package(std_msgs REQUIRED)
+find_ros1_package(rosbag REQUIRED)
+find_ros1_package(rosbag_storage REQUIRED)
 
 # find ROS 1 packages with messages / services
 include(cmake/find_ros1_interface_packages.cmake)
@@ -181,7 +183,9 @@ ament_target_dependencies(${PROJECT_NAME}
   ${ros2_interface_packages}
   "rclcpp"
   "ros1_roscpp"
-  "ros1_std_msgs")
+  "ros1_std_msgs"
+  "ros1_rosbag"
+  "ros1_rosbag_storage")
 
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
@@ -209,12 +213,26 @@ custom_executable(dynamic_bridge
 target_link_libraries(dynamic_bridge
   ${PROJECT_NAME})
 
+# rosbag_converter_node
 
-custom_executable(rosbag_converter_node
-  "src/rosbag_converter_node.cpp"
+add_executable(rosbag_converter_node
   "src/rosbag_converter_node_main.cpp"
-  ROS1_DEPENDENCIES
-  TARGET_DEPENDENCIES ${ros2_interface_packages})
+  "src/rosbag_converter_node.cpp")
+
+ament_target_dependencies(rosbag_converter_node
+  "rclcpp"
+  ${ros2_interface_packages})
+
+ament_target_dependencies(rosbag_converter_node
+  "ros1_roscpp"
+  "ros1_std_msgs"
+  "ros1_rosbag"
+  "ros1_rosbag_storage"
+  )
+
+install(TARGETS rosbag_converter_node
+  DESTINATION lib/${PROJECT_NAME})
+
 target_link_libraries(rosbag_converter_node
   ${PROJECT_NAME})
 

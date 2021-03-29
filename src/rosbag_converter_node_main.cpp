@@ -1,5 +1,4 @@
 #include <memory>
-#include <exception>
 #include "ros1_bridge/rosbag_converter_node.h"
 
 int main(int argc, char * argv[])
