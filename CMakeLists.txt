@@ -209,6 +209,13 @@ custom_executable(dynamic_bridge
 target_link_libraries(dynamic_bridge
   ${PROJECT_NAME})
 
+custom_executable(rosbag_bridge
+  "src/rosbag_bridge.cpp"
+  ROS1_DEPENDENCIES
+  TARGET_DEPENDENCIES ${ros2_interface_packages})
+target_link_libraries(rosbag_bridge
+  ${PROJECT_NAME})
+
 if(TEST_ROS1_BRIDGE)
   custom_executable(test_ros2_client_cpp "test/test_ros2_client.cpp")
   ament_target_dependencies("test_ros2_client_cpp${target_suffix}" "ros1_roscpp" "diagnostic_msgs")
