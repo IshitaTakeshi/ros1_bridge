@@ -33,6 +33,8 @@
 #include "ros/header.h"
 #include "ros/service_manager.h"
 #include "ros/transport/transport_tcp.h"
+#include <rosbag/bag.h>
+#include <rosbag/view.h>
 
 // include ROS 2
 #include "rclcpp/rclcpp.hpp"
@@ -41,6 +43,9 @@
 #include "rcutils/get_env.h"
 
 #include "ros1_bridge/bridge.hpp"
+
+#include "rosbag2_cpp/writer.hpp"
+#include "rosbag2_cpp/writers/sequential_writer.hpp"
 
 
 std::mutex g_bridge_mutex;
