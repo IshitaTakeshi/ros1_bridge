@@ -209,12 +209,15 @@ custom_executable(dynamic_bridge
 target_link_libraries(dynamic_bridge
   ${PROJECT_NAME})
 
-custom_executable(rosbag_bridge
-  "src/rosbag_bridge.cpp"
+
+custom_executable(rosbag_converter_node
+  "src/rosbag_converter_node.cpp"
+  "src/rosbag_converter_node_main.cpp"
   ROS1_DEPENDENCIES
   TARGET_DEPENDENCIES ${ros2_interface_packages})
-target_link_libraries(rosbag_bridge
+target_link_libraries(rosbag_converter_node
   ${PROJECT_NAME})
+
 
 if(TEST_ROS1_BRIDGE)
   custom_executable(test_ros2_client_cpp "test/test_ros2_client.cpp")
