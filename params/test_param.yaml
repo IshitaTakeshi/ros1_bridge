@@ -2,3 +2,4 @@ rosbag_converter_node:
   ros__parameters:
     path_in_ros1_bag_file: "/home/mfc/bags/038/038.bag"
     path_out_ros2_bag_file: "/home/mfc/bags/038/038.db3"
+    print_type_correspondences_1_to_2: false
