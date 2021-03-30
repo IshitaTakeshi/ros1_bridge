@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <sstream>
+#include "ros1_bridge/factory_interface.hpp"
 
 
 RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
@@ -128,6 +129,29 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     }
     RCLCPP_INFO_STREAM(this->get_logger(), ss_convertible_info.str());
   }
+
+  // Now we know supported topic names, their ROS1 types and ROS2 counterpart type names.
+
+  // Let's create the factory instances for these topics.
+
+  // Key: topic name
+  // Value: factory instance
+  using FactoryPtr = std::shared_ptr<ros1_bridge::FactoryInterface>;
+  std::map<std::string, FactoryPtr> map_topic_name_to_factory;
+
+  for (const auto & pair_key_value :map_topic_names_to_types) {
+    const auto & topic_name = pair_key_value.first;
+    const auto & topic_type_ros1 = pair_key_value.second;
+    const auto & ros2_counterpart_exists = map_type_has_ros2_version.at(topic_type_ros1);
+    if (!ros2_counterpart_exists) {
+      continue;
+    }
+    const auto & topic_type_ros2 = map_type_ros1_to_type_ros2.at(topic_type_ros1);
+
+    FactoryPtr factory = ros1_bridge::get_factory(topic_type_ros1, topic_type_ros2);
+    map_topic_name_to_factory.insert(std::make_pair(topic_name, factory));
+  }
+
 
 //  for (rosbag::MessageInstance const & m: view) {
 //    std_msgs::Int32::ConstPtr i = m.instantiate<std_msgs::Int32>();
