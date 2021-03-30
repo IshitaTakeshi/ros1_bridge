@@ -21,6 +21,8 @@
 #include "ros/node_handle.h"
 #include "ros/publisher.h"
 #include "ros/subscriber.h"
+#include "rosbag/bag.h"
+
 
 // include ROS 2
 #include "rclcpp/node.hpp"
@@ -117,6 +119,14 @@ public:
   virtual
   void
   convert_2_to_1(const void * ros2_msg, void * ros1_msg) = 0;
+
+  virtual
+  void * rosbag_message_instance_to_ros1_message(
+    rosbag::MessageInstance const & ros1_msg_instance) = 0;
+
+  virtual
+  ROS2_T rosbag_message_instance_to_ros2_message(
+      rosbag::MessageInstance const & ros1_msg_instance) = 0;
 };
 
 class ServiceFactoryInterface

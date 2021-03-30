@@ -30,6 +30,8 @@
 
 #include "ros1_bridge/factory_interface.hpp"
 
+#include "rosbag/bag.h"
+
 namespace ros1_bridge
 {
 
@@ -156,11 +158,20 @@ public:
     convert_1_to_2(*typed_ros1_msg, *typed_ros2_msg);
   }
 
-  void convert_2_to_1(const void * ros2_msg, void * ros1_msg) override
+  ROS1_T * rosbag_message_instance_to_ros1_message(
+    rosbag::MessageInstance const & ros1_msg_instance)  override
   {
-    auto typed_ros2_msg = reinterpret_cast<const ROS2_T *>(ros2_msg);
-    auto typed_ros1_msg = reinterpret_cast<ROS1_T *>(ros1_msg);
-    convert_2_to_1(*typed_ros2_msg, *typed_ros1_msg);
+    return ros1_msg_instance.instantiate<ROS1_T>();
+  }
+
+  ROS2_T * rosbag_message_instance_to_ros2_message(
+    rosbag::MessageInstance const & ros1_msg_instance)  override
+  {
+    auto ros1_message = rosbag_message_instance_to_ros1_message(ros1_msg_instance);
+
+    ROS2_T ros2_message;
+    convert_1_to_2(&ros1_message, ros2_message);
+    return ros2_message;
   }
 
 protected:

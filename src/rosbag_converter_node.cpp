@@ -4,6 +4,7 @@
 #include <vector>
 #include <sstream>
 #include "ros1_bridge/factory_interface.hpp"
+#include "ros1_bridge/factory.hpp"
 
 
 RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
@@ -152,13 +153,24 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     map_topic_name_to_factory.insert(std::make_pair(topic_name, factory));
   }
 
+  // Iterate through the messages within ROS1 bag file
 
-//  for (rosbag::MessageInstance const & m: view) {
-//    std_msgs::Int32::ConstPtr i = m.instantiate<std_msgs::Int32>();
-//    if (i != nullptr) {
-//      std::cout << i->data << std::endl;
-//    }
-//  }
+  for (rosbag::MessageInstance const & m: view) {
+    const auto & topic_name = m.getTopic();
+    const auto & topic_type_ros1 = map_topic_names_to_types.at(topic_name);
+    const auto & ros2_counterpart_exists = map_type_has_ros2_version.at(topic_type_ros1);
+    if (!ros2_counterpart_exists) {
+      continue;
+    }
+    FactoryPtr & factory = map_topic_name_to_factory.at(topic_name);
+
+    auto msg_ros2 = factory->rosbag_message_instance_to_ros2_message(m);
+
+    std_msgs::Int32::ConstPtr i = m.instantiate<std_msgs::Int32>();
+    if (i != nullptr) {
+      std::cout << i->data << std::endl;
+    }
+  }
 
   bag_in.close();
 
