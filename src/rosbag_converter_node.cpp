@@ -17,13 +17,18 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   auto path_out = static_cast<std::string>(
     rclcpp::Node::declare_parameter(
       "path_out_ros2_bag_file").get<std::string>());
-
   bool print_type_correspondences_1_to_2 = static_cast<bool>(
     rclcpp::Node::declare_parameter(
       "print_type_correspondences_1_to_2").get<bool>());
 
-  RCLCPP_INFO_STREAM(this->get_logger(), "path_in_ros1_bag_file: " << path_in);
-  RCLCPP_INFO_STREAM(this->get_logger(), "path_out_ros2_bag_file: " << path_out);
+  std::stringstream ss_input_args;
+  ss_input_args << "Input args: " << std::endl;
+  ss_input_args << "path_in_ros1_bag_file: " << path_in << std::endl;
+  ss_input_args << "path_out_ros2_bag_file: " << path_out << std::endl;
+  ss_input_args << "print_type_correspondences_1_to_2: " << print_type_correspondences_1_to_2 <<
+    std::endl;
+  ss_input_args << std::endl;
+  RCLCPP_INFO_STREAM(this->get_logger(), ss_input_args.str());
 
   rosbag::Bag bag_in;
   bag_in.open(path_in, rosbag::bagmode::Read);
@@ -57,9 +62,11 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   {
     std::stringstream ss_topics;
+    ss_topics << "Topic name-type pairs in the bag file:" << std::endl;
     for (const auto & pair_key_value :map_topic_names_to_types) {
       ss_topics << pair_key_value.first << " : " << pair_key_value.second << std::endl;
     }
+    ss_topics << std::endl;
     RCLCPP_INFO_STREAM(this->get_logger(), ss_topics.str());
   }
 
@@ -77,6 +84,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
         pair.first << " (ROS 2) <=> " <<
         pair.second.c_str() << " (ROS 1)" << std::endl;
     }
+    ss_topic_mapping << std::endl;
     RCLCPP_INFO_STREAM(this->get_logger(), ss_topic_mapping.str());
   }
 
@@ -103,6 +111,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   {
     // Print compatible topic name pairs
     std::stringstream ss_convertible_info;
+    ss_convertible_info << "Convertible topic name/type mapping information: " << std::endl;
     for (const auto & pair_key_value :map_topic_names_to_types) {
       const auto & topic_name = pair_key_value.first;
       const auto & topic_type_ros1 = pair_key_value.second;
