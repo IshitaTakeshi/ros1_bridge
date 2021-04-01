@@ -21,8 +21,6 @@
 #include "ros/header.h"
 #include "ros/service_manager.h"
 #include "ros/transport/transport_tcp.h"
-#include <rosbag/bag.h>
-#include <rosbag/view.h>
 #include <std_msgs_factories.hpp>
 
 // include ROS 2
@@ -33,8 +31,6 @@
 
 #include "ros1_bridge/bridge.hpp"
 
-#include "rosbag2_cpp/writer.hpp"
-#include "rosbag2_cpp/writers/sequential_writer.hpp"
 #include "std_msgs/msg/string.hpp"
 
 

@@ -6,6 +6,15 @@
 #include "ros1_bridge/factory_interface.hpp"
 #include "sensor_msgs_factories.hpp"
 
+#include <rosbag/bag.h>
+#include <rosbag/view.h>
+
+#include "rclcpp/serialization.hpp"
+#include "rclcpp/serialized_message.hpp"
+#include "rcpputils/filesystem_helper.hpp"
+#include "rosbag2_cpp/writer.hpp"
+#include "rosbag2_cpp/writers/sequential_writer.hpp"
+
 RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 : Node("rosbag_converter_node", options),
   pub_ptr_string_test_{this->create_publisher<std_msgs::msg::String>(
@@ -151,6 +160,16 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     map_topic_name_to_factory.insert(std::make_pair(topic_name, factory));
   }
 
+
+//  auto rosbag2_directory = rcpputils::fs::path(path_out);
+//  rosbag2_cpp::writers::SequentialWriter writer;
+//  rosbag2_cpp::StorageOptions storage_options;
+//  storage_options.uri = path_out;
+//  rosbag2_cpp::ConverterOptions converter_options;
+//  converter_options.input_serialization_format = "rmw_format";
+//  converter_options.output_serialization_format = "rmw_format";
+//  writer.open(storage_options, converter_options);
+
   for (rosbag::MessageInstance const & m: view) {
 
     const auto & topic_name = m.getTopic();
@@ -170,12 +189,25 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
       sensor_msgs::msg::PointCloud2 cloud_r2;
       factory->convert_1_to_2(&(*cloud_r1), &cloud_r2);
-      std::stringstream ss_pc;
-      ss_pc << "stamp.sec: " << cloud_r2.header.stamp.sec << std::endl <<
-        "stamp.nanosec: " << cloud_r2.header.stamp.nanosec << std::endl <<
-        "width: " << cloud_r2.width << std::endl;
-      RCLCPP_INFO_STREAM(this->get_logger(), ss_pc.str());
+//      std::stringstream ss_pc;
+//      ss_pc << "stamp.sec: " << cloud_r2.header.stamp.sec << std::endl <<
+//        "stamp.nanosec: " << cloud_r2.header.stamp.nanosec << std::endl <<
+//        "width: " << cloud_r2.width << std::endl;
+//      RCLCPP_INFO_STREAM(this->get_logger(), ss_pc.str());
 
+      rclcpp::SerializedMessage serialized_msg;
+      rclcpp::Serialization<sensor_msgs::msg::PointCloud2> serialization;
+      serialization.serialize_message(&cloud_r2, &serialized_msg);
+
+
+//      auto bag_message = std::make_shared<rosbag2_storage::SerializedBagMessage>();
+//
+//      bag_message->topic_name = topic_name;
+//      bag_message->time_stamp = m.getTime().toNSec();
+//      bag_message->serialized_data = std::shared_ptr<rcutils_uint8_array_t>(
+//        &serialized_msg.get_rcl_serialized_message(), [](rcutils_uint8_array_t * /* data */) {});
+
+//      writer.write(bag_message);
 
     }
 

@@ -183,9 +183,7 @@ ament_target_dependencies(${PROJECT_NAME}
   ${ros2_interface_packages}
   "rclcpp"
   "ros1_roscpp"
-  "ros1_std_msgs"
-  "ros1_rosbag"
-  "ros1_rosbag_storage")
+  "ros1_std_msgs")
 
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
