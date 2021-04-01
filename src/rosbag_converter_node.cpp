@@ -164,12 +164,31 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     }
     FactoryPtr & factory = map_topic_name_to_factory.at(topic_name);
 
-    auto msg_ros2 = factory->rosbag_message_instance_to_ros2_message(m);
-
     std_msgs::Int32::ConstPtr i = m.instantiate<std_msgs::Int32>();
     if (i != nullptr) {
       std::cout << i->data << std::endl;
     }
+
+    // Type information cannot be exposed to outside of factories because
+    // type embedding is done at compile time and get_factory method in
+    // get_factory.cpp brings the correct factory based on types provided
+    // but through FactoryInterface which doesn't have type information
+
+    // This means all of the conversion and type information requiring operations
+    // should be done within the factory. And no type will be exposed to outside.
+
+    // Even in original bridge, it only exposes generic Subscribers and Publishers
+    // to outside, not their message types.
+
+    auto msg_ros2 = factory->rosbag_message_instance_to_ros2_message(m);
+
+//    rclcpp::SerializedMessage serialized_msg;
+//    rclcpp::Serialization<TestMsgT> serialization;
+//    serialization.serialize_message(&test_msg, &serialized_msg);
+//    rosbag2_cpp::Writer writer;
+//    writer.open(rosbag_directory.string());
+//    writer.write(bag_message);
+
   }
 
   bag_in.close();
