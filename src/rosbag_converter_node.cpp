@@ -4,7 +4,7 @@
 #include <vector>
 #include <sstream>
 #include "ros1_bridge/factory_interface.hpp"
-
+#include "sensor_msgs_factories.hpp"
 
 RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 : Node("rosbag_converter_node", options),
@@ -33,7 +33,6 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   rosbag::Bag bag_in;
   bag_in.open(path_in, rosbag::bagmode::Read);
-
 
   rosbag::View view(bag_in);
 
@@ -152,15 +151,37 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     map_topic_name_to_factory.insert(std::make_pair(topic_name, factory));
   }
 
+  for (rosbag::MessageInstance const & m: view) {
 
-//  for (rosbag::MessageInstance const & m: view) {
-//    std_msgs::Int32::ConstPtr i = m.instantiate<std_msgs::Int32>();
-//    if (i != nullptr) {
-//      std::cout << i->data << std::endl;
-//    }
-//  }
+    const auto & topic_name = m.getTopic();
+    const auto & topic_type_ros1 = map_topic_names_to_types.at(topic_name);
+    const auto & ros2_counterpart_exists = map_type_has_ros2_version.at(topic_type_ros1);
+    if (!ros2_counterpart_exists) {
+      continue;
+    }
+    FactoryPtr & factory = map_topic_name_to_factory.at(topic_name);
+
+    if (topic_type_ros1 == "sensor_msgs/PointCloud2") {
+      sensor_msgs::PointCloud2::ConstPtr cloud_r1 = m.instantiate<sensor_msgs::PointCloud2>();
+
+      if (cloud_r1 == nullptr) {
+        continue;
+      }
+
+      sensor_msgs::msg::PointCloud2 cloud_r2;
+      factory->convert_1_to_2(&(*cloud_r1), &cloud_r2);
+      std::stringstream ss_pc;
+      ss_pc << "stamp.sec: " << cloud_r2.header.stamp.sec << std::endl <<
+        "stamp.nanosec: " << cloud_r2.header.stamp.nanosec << std::endl <<
+        "width: " << cloud_r2.width << std::endl;
+      RCLCPP_INFO_STREAM(this->get_logger(), ss_pc.str());
+
+
+    }
+
+
+  }
 
   bag_in.close();
-
 
 }
