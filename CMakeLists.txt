@@ -10,6 +10,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra)
 endif()
 
+find_package(Protobuf REQUIRED)
 find_package(rmw REQUIRED)
 
 find_package(ament_cmake REQUIRED)
@@ -215,7 +216,8 @@ target_link_libraries(dynamic_bridge
 
 add_executable(rosbag_converter_node
   "src/rosbag_converter_node_main.cpp"
-  "src/rosbag_converter_node.cpp")
+  "src/rosbag_converter_node.cpp"
+  "src/proto_rosbag2.pb.cc")
 
 ament_target_dependencies(rosbag_converter_node
   "rclcpp"
@@ -232,7 +234,8 @@ install(TARGETS rosbag_converter_node
   DESTINATION lib/${PROJECT_NAME})
 
 target_link_libraries(rosbag_converter_node
-  ${PROJECT_NAME})
+  ${PROJECT_NAME}
+  protobuf::libprotobuf)
 
 
 if(TEST_ROS1_BRIDGE)

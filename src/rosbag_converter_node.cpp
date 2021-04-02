@@ -12,8 +12,9 @@
 #include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rcpputils/filesystem_helper.hpp"
-#include "rosbag2_cpp/writer.hpp"
-#include "rosbag2_cpp/writers/sequential_writer.hpp"
+#include "ros1_bridge/proto_rosbag2.pb.h"
+#include <iostream>
+#include <fstream>
 
 RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 : Node("rosbag_converter_node", options),
@@ -26,7 +27,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
       "path_in_ros1_bag_file").get<std::string>());
   auto path_out = static_cast<std::string>(
     rclcpp::Node::declare_parameter(
-      "path_out_ros2_bag_file").get<std::string>());
+      "path_out_ros2_serialized_binary").get<std::string>());
   bool print_type_correspondences_1_to_2 = static_cast<bool>(
     rclcpp::Node::declare_parameter(
       "print_type_correspondences_1_to_2").get<bool>());
@@ -34,7 +35,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   std::stringstream ss_input_args;
   ss_input_args << "Input args: " << std::endl;
   ss_input_args << "path_in_ros1_bag_file: " << path_in << std::endl;
-  ss_input_args << "path_out_ros2_bag_file: " << path_out << std::endl;
+  ss_input_args << "path_out_ros2_serialized_binary: " << path_out << std::endl;
   ss_input_args << "print_type_correspondences_1_to_2: " << print_type_correspondences_1_to_2 <<
     std::endl;
   ss_input_args << std::endl;
@@ -161,15 +162,8 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   }
 
 
-//  auto rosbag2_directory = rcpputils::fs::path(path_out);
-//  rosbag2_cpp::writers::SequentialWriter writer;
-//  rosbag2_cpp::StorageOptions storage_options;
-//  storage_options.uri = path_out;
-//  rosbag2_cpp::ConverterOptions converter_options;
-//  converter_options.input_serialization_format = "rmw_format";
-//  converter_options.output_serialization_format = "rmw_format";
-//  writer.open(storage_options, converter_options);
-
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+  rosbag_converter_proto::ProtoRosBag2 proto_rosbag2;
   for (rosbag::MessageInstance const & m: view) {
 
     const auto & topic_name = m.getTopic();
@@ -178,42 +172,38 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     if (!ros2_counterpart_exists) {
       continue;
     }
+    const auto & topic_type_ros2 = map_type_ros1_to_type_ros2.at(topic_type_ros1);
     FactoryPtr & factory = map_topic_name_to_factory.at(topic_name);
 
     if (topic_type_ros1 == "sensor_msgs/PointCloud2") {
       sensor_msgs::PointCloud2::ConstPtr cloud_r1 = m.instantiate<sensor_msgs::PointCloud2>();
-
+      sensor_msgs::msg::PointCloud2 cloud_r2;
       if (cloud_r1 == nullptr) {
         continue;
       }
-
-      sensor_msgs::msg::PointCloud2 cloud_r2;
-      factory->convert_1_to_2(&(*cloud_r1), &cloud_r2);
-//      std::stringstream ss_pc;
-//      ss_pc << "stamp.sec: " << cloud_r2.header.stamp.sec << std::endl <<
-//        "stamp.nanosec: " << cloud_r2.header.stamp.nanosec << std::endl <<
-//        "width: " << cloud_r2.width << std::endl;
-//      RCLCPP_INFO_STREAM(this->get_logger(), ss_pc.str());
-
+      factory->convert_1_to_2(cloud_r1.get(), &cloud_r2);
       rclcpp::SerializedMessage serialized_msg;
       rclcpp::Serialization<sensor_msgs::msg::PointCloud2> serialization;
       serialization.serialize_message(&cloud_r2, &serialized_msg);
 
-
-//      auto bag_message = std::make_shared<rosbag2_storage::SerializedBagMessage>();
-//
-//      bag_message->topic_name = topic_name;
-//      bag_message->time_stamp = m.getTime().toNSec();
-//      bag_message->serialized_data = std::shared_ptr<rcutils_uint8_array_t>(
-//        &serialized_msg.get_rcl_serialized_message(), [](rcutils_uint8_array_t * /* data */) {});
-
-//      writer.write(bag_message);
+      auto proto_message_ptr = proto_rosbag2.add_messages();
+      proto_message_ptr->set_topic_name(topic_name);
+      proto_message_ptr->set_topic_type_name(topic_type_ros2);
+      proto_message_ptr->set_time_stamp(m.getTime().toNSec());
+      proto_message_ptr->set_serialized_data(
+        reinterpret_cast<char *>(serialized_msg.
+        get_rcl_serialized_message().buffer), serialized_msg.size());
 
     }
-
 
   }
 
   bag_in.close();
+
+  std::fstream output(path_out, std::ios::out | std::ios::trunc | std::ios::binary);
+  if (!proto_rosbag2.SerializeToOstream(&output)) {
+    RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to write serialized bag to disk.");
+  }
+
 
 }
