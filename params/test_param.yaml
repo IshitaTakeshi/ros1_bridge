@@ -1,5 +1,5 @@
 rosbag_converter_node:
   ros__parameters:
-    path_in_ros1_bag_file: "/home/mfc/bags/038/038.bag"
-    path_out_ros2_serialized_binary: "/home/mfc/bags/038/038.proto_rosbag2"
-    print_type_correspondences_1_to_2: false
+    path_in_ros1_bag_file: "/home/mfc/bags/038/038.bag" # This file will be used read only
+    path_out_ros2_serialized_binary: "/home/mfc/bags/038/038.proto_rosbag2" # This file will be overwritten if it exists
+    print_type_correspondences_1_to_2: false # Use this to print what ROS1<->ROS2 conversions are available for you
