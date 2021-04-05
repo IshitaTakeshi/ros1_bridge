@@ -123,8 +123,9 @@ public:
 
   virtual
   bool
-  ros1_message_instance_to_ros2_serialized_message(const rosbag::MessageInstance& message_instance,
-                                                   rclcpp::SerializedMessage& serialized_message) = 0;
+  ros1_message_instance_to_ros2_serialized_message(
+    const rosbag::MessageInstance & message_instance,
+    rclcpp::SerializedMessage & serialized_message) = 0;
 };
 
 class ServiceFactoryInterface

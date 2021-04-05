@@ -168,8 +168,10 @@ public:
   }
 
   bool
-  ros1_message_instance_to_ros2_serialized_message(const rosbag::MessageInstance& message_instance,
-                                                   rclcpp::SerializedMessage& serialized_message) override {
+  ros1_message_instance_to_ros2_serialized_message(
+    const rosbag::MessageInstance & message_instance,
+    rclcpp::SerializedMessage & serialized_message) override
+  {
     auto cloud_ptr_r1 = message_instance.instantiate<ROS1_T>();
     ROS2_T cloud_r2;
     if (cloud_ptr_r1 == nullptr) {
@@ -180,9 +182,9 @@ public:
     rclcpp::Serialization<ROS2_T> serialization;
     serialization.serialize_message(&cloud_r2, &serialized_message);
     return true;
-  };
+  }
 
- protected:
+protected:
   static
   void ros1_callback(
     const ros::MessageEvent<ROS1_T const> & ros1_msg_event,

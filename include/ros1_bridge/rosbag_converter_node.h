@@ -41,5 +41,4 @@ public:
   rclcpp::Publisher < std_msgs::msg::String > ::SharedPtr pub_ptr_string_test_;
 
 private:
-
 };

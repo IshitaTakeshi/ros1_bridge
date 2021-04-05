@@ -175,10 +175,14 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     const auto & topic_type_ros2 = map_type_ros1_to_type_ros2.at(topic_type_ros1);
     FactoryPtr & factory = map_topic_name_to_factory.at(topic_name);
     rclcpp::SerializedMessage serialized_msg;
-    bool conversion_is_successful = factory->ros1_message_instance_to_ros2_serialized_message(m,serialized_msg);
+    bool conversion_is_successful = factory->ros1_message_instance_to_ros2_serialized_message(
+      m,
+      serialized_msg);
 
-    if(!conversion_is_successful){
-      RCLCPP_ERROR_STREAM(this->get_logger(), "Type conversion failed: " << topic_type_ros1 << " to " << topic_type_ros2);
+    if (!conversion_is_successful) {
+      RCLCPP_ERROR_STREAM(
+        this->get_logger(),
+        "Type conversion failed: " << topic_type_ros1 << " to " << topic_type_ros2);
       continue;
     }
 
@@ -187,8 +191,8 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     proto_message_ptr->set_topic_type_name(topic_type_ros2);
     proto_message_ptr->set_time_stamp(m.getTime().toNSec());
     proto_message_ptr->set_serialized_data(
-        reinterpret_cast<char *>(serialized_msg.
-            get_rcl_serialized_message().buffer), serialized_msg.size());
+      reinterpret_cast<char *>(serialized_msg.
+      get_rcl_serialized_message().buffer), serialized_msg.size());
   }
 
   bag_in.close();
