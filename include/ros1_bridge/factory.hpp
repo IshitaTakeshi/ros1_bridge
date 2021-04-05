@@ -22,6 +22,7 @@
 
 #include "rmw/rmw.h"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/serialization.hpp"
 
 // include ROS 1 message event
 #include "ros/message.h"
@@ -29,6 +30,9 @@
 #include "rcutils/logging_macros.h"
 
 #include "ros1_bridge/factory_interface.hpp"
+
+#include <rosbag/bag.h>
+#include <rosbag/view.h>
 
 namespace ros1_bridge
 {
@@ -163,7 +167,22 @@ public:
     convert_2_to_1(*typed_ros2_msg, *typed_ros1_msg);
   }
 
-protected:
+  bool
+  ros1_message_instance_to_ros2_serialized_message(const rosbag::MessageInstance& message_instance,
+                                                   rclcpp::SerializedMessage& serialized_message) override {
+    auto cloud_ptr_r1 = message_instance.instantiate<ROS1_T>();
+    ROS2_T cloud_r2;
+    if (cloud_ptr_r1 == nullptr) {
+      std::cerr << "Couldn't instantiate message type." << std::endl;
+      return false;
+    }
+    convert_1_to_2(cloud_ptr_r1.get(), &cloud_r2);
+    rclcpp::Serialization<ROS2_T> serialization;
+    serialization.serialize_message(&cloud_r2, &serialized_message);
+    return true;
+  };
+
+ protected:
   static
   void ros1_callback(
     const ros::MessageEvent<ROS1_T const> & ros1_msg_event,
