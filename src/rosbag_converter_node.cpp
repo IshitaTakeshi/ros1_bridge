@@ -161,11 +161,44 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     map_topic_name_to_factory.insert(std::make_pair(topic_name, factory));
   }
 
+  // Simple x^n (integer^integer) exponent function
+  auto pow_ul = [](uint64_t x, uint32_t n)
+    {
+      uint64_t y = 1UL;
+      for (uint32_t i = 0; i < n; i++) {
+        y *= x;
+      }
+      return y;
+    };
+
+  const size_t proto_max_file_size_bytes = pow_ul(10, 9);
+  int count_written_proto_files = 0;
 
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   rosbag_converter_proto::ProtoRosBag2 proto_rosbag2;
-  for (rosbag::MessageInstance const & m: view) {
 
+  auto write_to_rosbag2 =
+    [&count_written_proto_files,
+      &proto_rosbag2,
+      path_out,
+      this]() {
+      std::string str_count_raw = std::to_string(count_written_proto_files);
+      std::string str_count_with_leading_zeros = "_" +
+        std::string(3 - str_count_raw.length(), '0') + str_count_raw;
+      std::string str_file_name = path_out + str_count_with_leading_zeros;
+      std::fstream output(str_file_name,
+        std::ios::out | std::ios::trunc | std::ios::binary);
+      if (!proto_rosbag2.SerializeToOstream(&output)) {
+        RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to write serialized bag to disk.");
+        return false;
+      }
+      RCLCPP_INFO_STREAM(this->get_logger(), "File written successfully: " + str_file_name);
+      count_written_proto_files++;
+      proto_rosbag2.Clear();
+      return true;
+    };
+
+  for (rosbag::MessageInstance const & m: view) {
     const auto & topic_name = m.getTopic();
     const auto & topic_type_ros1 = map_topic_names_to_types.at(topic_name);
     const auto & ros2_counterpart_exists = map_type_has_ros2_version.at(topic_type_ros1);
@@ -193,14 +226,23 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     proto_message_ptr->set_serialized_data(
       reinterpret_cast<char *>(serialized_msg.
       get_rcl_serialized_message().buffer), serialized_msg.size());
+
+    if (proto_rosbag2.ByteSizeLong() > proto_max_file_size_bytes) {
+      // Write every 1GB
+      // Name them as file_name.proto_rosbag2_000, file_name.proto_rosbag2_001, ...
+      if (!write_to_rosbag2()) {
+        return;
+      }
+    }
+  }
+
+  if (proto_rosbag2.ByteSizeLong() > 0) {
+    // Write residual <1GB part if exists
+    // Name them as file_name.proto_rosbag2_000, file_name.proto_rosbag2_001, ...
+    if (!write_to_rosbag2()) {
+      return;
+    }
   }
 
   bag_in.close();
-
-  std::fstream output(path_out, std::ios::out | std::ios::trunc | std::ios::binary);
-  if (!proto_rosbag2.SerializeToOstream(&output)) {
-    RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to write serialized bag to disk.");
-  }
-
-
 }

@@ -56,7 +56,11 @@ Edit this file with your directories:
 ~/rosbag_converter_ws/src/ros1_bridge/params/test_param.yaml
 # defaults:
     path_in_ros1_bag_file: "/home/mfc/bags/038/038.bag" # This file will be used read only
+    
     path_out_ros2_serialized_binary: "/home/mfc/bags/038/038.proto_rosbag2" # This file will be overwritten if it exists
+    # The saved file names will be with ".proto_rosbag2_000, .proto_rosbag2_001, ..." extensions. With max 1GB file sizes.
+    # But you don't need to worry about the numbers in the end.
+    
     print_type_correspondences_1_to_2: false # Use this to print what ROS1<->ROS2 conversions are available for you
 ```
 ```bash
