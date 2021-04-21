@@ -1,6 +1,6 @@
 # RosbagConverter
 This repository has been p̶i̶l̶l̶a̶g̶e̶d̶ modified to be able to convert ROS1 bag files to ROS2 bag files.
-( Old readme is at https://github.com/leo-drive/ros1_bridge/blob/rosbag_converter/README_Old.md )
+( Old readme is at https://github.com/leo-drive/ros1_bridge/blob/master/README_Old.md )
 
 The `rosbag_converter_node` executable in `ros1_bridge` package converts the ROS1 bag files to `.proto_rosbag2`
 format. Then you should use https://github.com/leo-drive/proto_to_rosbag2 package and its instructions to convert
