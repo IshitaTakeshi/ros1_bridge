@@ -166,23 +166,17 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
       return y;
     };
 
-  const size_t proto_max_file_size_bytes = pow_ul(10, 9);
   int count_written_proto_files = 0;
 
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   rosbag_converter_proto::ProtoRosBag2 proto_rosbag2;
 
   auto write_to_rosbag2 =
-    [&count_written_proto_files,
-      &proto_rosbag2,
-      path_out,
-      this]() {
+    [&count_written_proto_files, &proto_rosbag2, path_out, this]() {
       std::string str_count_raw = std::to_string(count_written_proto_files);
-      std::string str_count_with_leading_zeros = "_" +
-        std::string(3 - str_count_raw.length(), '0') + str_count_raw;
+      std::string str_count_with_leading_zeros = "_" + std::string(3 - str_count_raw.length(), '0') + str_count_raw;
       std::string str_file_name = path_out + str_count_with_leading_zeros;
-      std::fstream output(str_file_name,
-        std::ios::out | std::ios::trunc | std::ios::binary);
+      std::fstream output(str_file_name, std::ios::out | std::ios::trunc | std::ios::binary);
       if (!proto_rosbag2.SerializeToOstream(&output)) {
         RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to write serialized bag to disk.");
         return false;
@@ -222,7 +216,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
       reinterpret_cast<char *>(serialized_msg.
       get_rcl_serialized_message().buffer), serialized_msg.size());
 
-    if (proto_rosbag2.ByteSizeLong() > proto_max_file_size_bytes) {
+    if (proto_rosbag2.ByteSizeLong() > pow_ul(10, 9)) {
       // Write every 1GB
       // Name them as file_name.proto_rosbag2_000, file_name.proto_rosbag2_001, ...
       if (!write_to_rosbag2()) {
