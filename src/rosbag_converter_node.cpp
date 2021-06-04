@@ -95,22 +95,6 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
                         "None of the types in the bag file are convertible to ROS2.");
   }
 
-  {
-    // Print compatible topic name pairs
-    std::stringstream ss_convertible_info;
-    ss_convertible_info << "Convertible topic name/type mapping information: " << std::endl;
-    for (const auto &[topic_name, ros1_type] : topic_name_to_type) {
-      if (!hasKey(ros1_type_to_ros2_type, ros1_type)) {
-        continue;
-      }
-      const auto& ros2_type = ros1_type_to_ros2_type.at(ros1_type);
-
-      ss_convertible_info << topic_name << " : (ROS1) " << ros1_type << " <=> "
-                          << ros2_type << " (ROS2)" << std::endl;
-    }
-    RCLCPP_INFO_STREAM(this->get_logger(), ss_convertible_info.str());
-  }
-
   // Now we know supported topic names, their ROS1 types and ROS2 counterpart type names.
 
   // Let's create the factory instances for these topics.
