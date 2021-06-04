@@ -23,6 +23,19 @@ std::string makeProtobufPath(const std::string& path_out, const int count_writte
   return path_out + str_count_with_leading_zeros;
 }
 
+void printTypeCorrespondences(const rclcpp::Logger& logger,
+                              const std::multimap<std::basic_string<char>, std::basic_string<char>>& mappings_2to1) {
+  std::stringstream ss_topic_mapping;
+  ss_topic_mapping << "Supported ROS 2 <=> ROS 1 message type conversion pairs:" << std::endl;
+  for (auto & [ros1_type, ros2_type] : mappings_2to1) {
+    ss_topic_mapping << "  - "
+        << ros1_type << " (ROS 1) <=> "
+        << ros2_type << " (ROS 2)" << std::endl;
+  }
+  ss_topic_mapping << std::endl;
+  RCLCPP_INFO_STREAM(logger, ss_topic_mapping.str());
+}
+
 RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 : Node("rosbag_converter_node", options),
   pub_ptr_string_test_{this->create_publisher<std_msgs::msg::String>(
@@ -81,17 +94,8 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     RCLCPP_ERROR_STREAM(this->get_logger(), "No message type conversion pairs supported.");
     return;
   }
-  {
-    std::stringstream ss_topic_mapping;
-    ss_topic_mapping << "Supported ROS 2 <=> ROS 1 message type conversion pairs:" << std::endl;
-    for (auto & [ros1_type, ros2_type] : mappings_2to1) {
-      ss_topic_mapping << "  - "
-          << ros1_type << " (ROS 1) <=> "
-          << ros2_type << " (ROS 2)" << std::endl;
-    }
-    ss_topic_mapping << std::endl;
-    RCLCPP_INFO_STREAM(this->get_logger(), ss_topic_mapping.str());
-  }
+
+  printTypeCorrespondences(this->get_logger(), mappings_2to1);
 
   // for each of the topic types, check if it has ros2 counterpart
 
