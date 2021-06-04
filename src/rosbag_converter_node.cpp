@@ -23,21 +23,18 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
       10)}
 {
   auto path_in = static_cast<std::string>(
-    rclcpp::Node::declare_parameter(
-      "path_in_ros1_bag_file").get<std::string>());
+    rclcpp::Node::declare_parameter("path_in_ros1_bag_file").get<std::string>());
   auto path_out = static_cast<std::string>(
-    rclcpp::Node::declare_parameter(
-      "path_out_ros2_serialized_binary").get<std::string>());
+    rclcpp::Node::declare_parameter("path_out_ros2_serialized_binary").get<std::string>());
   bool print_type_correspondences_1_to_2 = static_cast<bool>(
-    rclcpp::Node::declare_parameter(
-      "print_type_correspondences_1_to_2").get<bool>());
+    rclcpp::Node::declare_parameter("print_type_correspondences_1_to_2").get<bool>());
 
   std::stringstream ss_input_args;
   ss_input_args << "Input args: " << std::endl;
   ss_input_args << "path_in_ros1_bag_file: " << path_in << std::endl;
   ss_input_args << "path_out_ros2_serialized_binary: " << path_out << std::endl;
-  ss_input_args << "print_type_correspondences_1_to_2: " << print_type_correspondences_1_to_2 <<
-    std::endl;
+  ss_input_args << "print_type_correspondences_1_to_2: "
+                << print_type_correspondences_1_to_2 << std::endl;
   ss_input_args << std::endl;
   RCLCPP_INFO_STREAM(this->get_logger(), ss_input_args.str());
 
@@ -50,17 +47,16 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   // Keys: (string) topic names
   // Values: (string) topic type names
-  std::map<std::string, std::string> map_topic_names_to_types;
+  std::map<std::string, std::string> topic_name_type_map;
 
   // Keys: (string) topic type names
   // Values: (bool) the type has ros2 counterpart (false by default)
   std::map<std::string, bool> map_type_has_ros2_version;
 
-  for (const rosbag::ConnectionInfo * info: connection_infos) {
-    bool doesnt_contain = map_topic_names_to_types.find(info->topic) ==
-      map_topic_names_to_types.end();
+  for (const rosbag::ConnectionInfo * info : connection_infos) {
+    bool doesnt_contain = topic_name_type_map.find(info->topic) == topic_name_type_map.end();
     if (doesnt_contain) {
-      map_topic_names_to_types.insert(std::make_pair(info->topic, info->datatype));
+      topic_name_type_map.insert(std::make_pair(info->topic, info->datatype));
       // Now add type name to map_type_has_ros2_version if it doesn't contain already
       bool doesnt_contain_map2 = map_type_has_ros2_version.find(info->datatype) ==
         map_type_has_ros2_version.end();
@@ -73,7 +69,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   {
     std::stringstream ss_topics;
     ss_topics << "Topic name-type pairs in the bag file:" << std::endl;
-    for (const auto & pair_key_value :map_topic_names_to_types) {
+    for (const auto & pair_key_value : topic_name_type_map) {
       ss_topics << pair_key_value.first << " : " << pair_key_value.second << std::endl;
     }
     ss_topics << std::endl;
@@ -103,7 +99,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   std::map<std::string, std::string> map_type_ros1_to_type_ros2;
 
-  for (auto & pair_key_value :map_type_has_ros2_version) {
+  for (auto & pair_key_value : map_type_has_ros2_version) {
     const auto & type_name = pair_key_value.first;
     bool & ros2_counterpart_exists = pair_key_value.second;
     std::string type_name_ros2;
@@ -122,7 +118,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     // Print compatible topic name pairs
     std::stringstream ss_convertible_info;
     ss_convertible_info << "Convertible topic name/type mapping information: " << std::endl;
-    for (const auto & pair_key_value :map_topic_names_to_types) {
+    for (const auto & pair_key_value : topic_name_type_map) {
       const auto & topic_name = pair_key_value.first;
       const auto & topic_type_ros1 = pair_key_value.second;
       const auto & ros2_counterpart_exists = map_type_has_ros2_version.at(topic_type_ros1);
@@ -148,7 +144,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   using FactoryPtr = std::shared_ptr<ros1_bridge::FactoryInterface>;
   std::map<std::string, FactoryPtr> map_topic_name_to_factory;
 
-  for (const auto & pair_key_value :map_topic_names_to_types) {
+  for (const auto & pair_key_value : topic_name_type_map) {
     const auto & topic_name = pair_key_value.first;
     const auto & topic_type_ros1 = pair_key_value.second;
     const auto & ros2_counterpart_exists = map_type_has_ros2_version.at(topic_type_ros1);
@@ -198,9 +194,9 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
       return true;
     };
 
-  for (rosbag::MessageInstance const & m: view) {
+  for (rosbag::MessageInstance const & m : view) {
     const auto & topic_name = m.getTopic();
-    const auto & topic_type_ros1 = map_topic_names_to_types.at(topic_name);
+    const auto & topic_type_ros1 = topic_name_type_map.at(topic_name);
     const auto & ros2_counterpart_exists = map_type_has_ros2_version.at(topic_type_ros1);
     if (!ros2_counterpart_exists) {
       continue;
