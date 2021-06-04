@@ -142,7 +142,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   // Key: topic name
   // Value: factory instance
   using FactoryPtr = std::shared_ptr<ros1_bridge::FactoryInterface>;
-  std::map<std::string, FactoryPtr> map_topic_name_to_factory;
+  std::map<std::string, FactoryPtr> topic_name_to_factory;
 
   for (const auto & pair_key_value : topic_name_type_map) {
     const auto & topic_name = pair_key_value.first;
@@ -154,7 +154,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     const auto & topic_type_ros2 = ros1_type_to_ros2_type.at(topic_type_ros1);
 
     FactoryPtr factory = ros1_bridge::get_factory(topic_type_ros1, topic_type_ros2);
-    map_topic_name_to_factory.insert(std::make_pair(topic_name, factory));
+    topic_name_to_factory.insert(std::make_pair(topic_name, factory));
   }
 
   // Simple x^n (integer^integer) exponent function
@@ -193,7 +193,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
       continue;
     }
     const auto & topic_type_ros2 = ros1_type_to_ros2_type.at(topic_type_ros1);
-    FactoryPtr & factory = map_topic_name_to_factory.at(topic_name);
+    FactoryPtr & factory = topic_name_to_factory.at(topic_name);
     rclcpp::SerializedMessage serialized_msg;
     bool is_converted = factory->ros1_message_instance_to_ros2_serialized_message(
       m,
