@@ -31,14 +31,11 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 {
   const std::string path_in = rclcpp::Node::declare_parameter("path_in_ros1_bag_file").get<std::string>();
   const std::string path_out = rclcpp::Node::declare_parameter("path_out_ros2_serialized_binary").get<std::string>();
-  const bool print_type_correspondences_1_to_2 = rclcpp::Node::declare_parameter("print_type_correspondences_1_to_2").get<bool>();
 
   std::stringstream ss_input_args;
   ss_input_args << "Input args: " << std::endl;
   ss_input_args << "path_in_ros1_bag_file: " << path_in << std::endl;
   ss_input_args << "path_out_ros2_serialized_binary: " << path_out << std::endl;
-  ss_input_args << "print_type_correspondences_1_to_2: "
-                << print_type_correspondences_1_to_2 << std::endl;
   ss_input_args << std::endl;
   RCLCPP_INFO_STREAM(this->get_logger(), ss_input_args.str());
 
@@ -84,7 +81,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     RCLCPP_ERROR_STREAM(this->get_logger(), "No message type conversion pairs supported.");
     return;
   }
-  if (print_type_correspondences_1_to_2) {
+  {
     std::stringstream ss_topic_mapping;
     ss_topic_mapping << "Supported ROS 2 <=> ROS 1 message type conversion pairs:" << std::endl;
     for (auto & pair : mappings_2to1) {
@@ -95,7 +92,6 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     ss_topic_mapping << std::endl;
     RCLCPP_INFO_STREAM(this->get_logger(), ss_topic_mapping.str());
   }
-
 
   // for each of the topic types, check if it has ros2 counterpart
 
@@ -111,8 +107,8 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     ros1_type_to_ros2_type.insert(std::make_pair(type_name, ros_type_name));
   }
   if (ros1_type_to_ros2_type.empty()) {
-    RCLCPP_ERROR_STREAM(
-      this->get_logger(), "None of the types in the bag file are convertible to ROS2.");
+    RCLCPP_ERROR_STREAM(this->get_logger(),
+                        "None of the types in the bag file are convertible to ROS2.");
   }
 
   {
