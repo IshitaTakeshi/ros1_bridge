@@ -52,6 +52,14 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   ss_input_args << std::endl;
   RCLCPP_INFO_STREAM(this->get_logger(), ss_input_args.str());
 
+  const auto & mappings_2to1 = ros1_bridge::get_all_message_mappings_2to1();
+  if (mappings_2to1.empty()) {
+    RCLCPP_ERROR_STREAM(this->get_logger(), "No message type conversion pairs supported.");
+    return;
+  }
+
+  printTypeCorrespondences(this->get_logger(), mappings_2to1);
+
   rosbag::Bag bag_in;
   bag_in.open(path_in, rosbag::bagmode::Read);
 
@@ -88,14 +96,6 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   }
 
   // check if there are any mappings at all
-
-  const auto & mappings_2to1 = ros1_bridge::get_all_message_mappings_2to1();
-  if (mappings_2to1.empty()) {
-    RCLCPP_ERROR_STREAM(this->get_logger(), "No message type conversion pairs supported.");
-    return;
-  }
-
-  printTypeCorrespondences(this->get_logger(), mappings_2to1);
 
   // for each of the topic types, check if it has ros2 counterpart
 
