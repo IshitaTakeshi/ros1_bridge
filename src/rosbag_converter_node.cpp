@@ -100,15 +100,14 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   std::map<std::string, std::string> map_type_ros1_to_type_ros2;
 
-  for (auto & pair_key_value : has_ros2_type) {
-    const auto & type_name = pair_key_value.first;
-    bool & ros2_counterpart_exists = pair_key_value.second;
-    std::string type_name_ros2;
-    ros2_counterpart_exists = ros1_bridge::get_1to2_mapping(type_name, type_name_ros2);
-    if (!ros2_counterpart_exists) {
+  for (auto & [type_name, _] : has_ros2_type) {
+    std::string ros_type_name;
+    const bool ros2_type_exists = ros1_bridge::get_1to2_mapping(type_name, ros_type_name);
+    has_ros2_type[type_name] = ros2_type_exists;
+    if (!ros2_type_exists) {
       continue;
     }
-    map_type_ros1_to_type_ros2.insert(std::make_pair(pair_key_value.first, type_name_ros2));
+    map_type_ros1_to_type_ros2.insert(std::make_pair(type_name, ros_type_name));
   }
   if (map_type_ros1_to_type_ros2.empty()) {
     RCLCPP_ERROR_STREAM(
