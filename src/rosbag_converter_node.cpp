@@ -120,8 +120,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     std::stringstream ss_convertible_info;
     ss_convertible_info << "Convertible topic name/type mapping information: " << std::endl;
     for (const auto &[topic_name, topic_type_ros1] : topic_name_to_type) {
-      const auto & ros2_counterpart_exists = has_ros2_type.at(topic_type_ros1);
-      if (!ros2_counterpart_exists) {
+      if (!has_ros2_type.at(topic_type_ros1)) {
         continue;
       }
       const auto & topic_type_ros2 = ros1_type_to_ros2_type.at(topic_type_ros1);
@@ -142,14 +141,13 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   std::map<std::string, FactoryPtr> topic_name_to_factory;
 
   for (const auto &[topic_name, topic_type_ros1] : topic_name_to_type) {
-    const auto & ros2_counterpart_exists = has_ros2_type.at(topic_type_ros1);
-    if (!ros2_counterpart_exists) {
+    if (!has_ros2_type.at(topic_type_ros1)) {
       continue;
     }
     const auto & topic_type_ros2 = ros1_type_to_ros2_type.at(topic_type_ros1);
 
     FactoryPtr factory = ros1_bridge::get_factory(topic_type_ros1, topic_type_ros2);
-    topic_name_to_factory.insert(std::make_pair(topic_name, factory));
+    topic_name_to_factory[topic_name] = factory;
   }
 
   int count_written_proto_files = 0;
