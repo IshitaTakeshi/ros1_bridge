@@ -83,7 +83,8 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   if (mappings_2to1.empty()) {
     RCLCPP_ERROR_STREAM(this->get_logger(), "No message type conversion pairs supported.");
     return;
-  } else if (print_type_correspondences_1_to_2) {
+  }
+  if (print_type_correspondences_1_to_2) {
     std::stringstream ss_topic_mapping;
     ss_topic_mapping << "Supported ROS 2 <=> ROS 1 message type conversion pairs:" << std::endl;
     for (auto & pair : mappings_2to1) {
