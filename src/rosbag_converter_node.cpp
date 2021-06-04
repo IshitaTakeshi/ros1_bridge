@@ -98,7 +98,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   // for each of the topic types, check if it has ros2 counterpart
 
-  std::map<std::string, std::string> map_type_ros1_to_type_ros2;
+  std::map<std::string, std::string> ros1_type_to_ros2_type;
 
   for (auto & [type_name, _] : has_ros2_type) {
     std::string ros_type_name;
@@ -107,9 +107,9 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     if (!ros2_type_exists) {
       continue;
     }
-    map_type_ros1_to_type_ros2.insert(std::make_pair(type_name, ros_type_name));
+    ros1_type_to_ros2_type.insert(std::make_pair(type_name, ros_type_name));
   }
-  if (map_type_ros1_to_type_ros2.empty()) {
+  if (ros1_type_to_ros2_type.empty()) {
     RCLCPP_ERROR_STREAM(
       this->get_logger(), "None of the types in the bag file are convertible to ROS2.");
   }
@@ -125,7 +125,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
       if (!ros2_counterpart_exists) {
         continue;
       }
-      const auto & topic_type_ros2 = map_type_ros1_to_type_ros2.at(topic_type_ros1);
+      const auto & topic_type_ros2 = ros1_type_to_ros2_type.at(topic_type_ros1);
 
       ss_convertible_info <<
         topic_name << " : (ROS1) " <<
@@ -151,7 +151,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     if (!ros2_counterpart_exists) {
       continue;
     }
-    const auto & topic_type_ros2 = map_type_ros1_to_type_ros2.at(topic_type_ros1);
+    const auto & topic_type_ros2 = ros1_type_to_ros2_type.at(topic_type_ros1);
 
     FactoryPtr factory = ros1_bridge::get_factory(topic_type_ros1, topic_type_ros2);
     map_topic_name_to_factory.insert(std::make_pair(topic_name, factory));
@@ -192,7 +192,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     if (!ros2_counterpart_exists) {
       continue;
     }
-    const auto & topic_type_ros2 = map_type_ros1_to_type_ros2.at(topic_type_ros1);
+    const auto & topic_type_ros2 = ros1_type_to_ros2_type.at(topic_type_ros1);
     FactoryPtr & factory = map_topic_name_to_factory.at(topic_name);
     rclcpp::SerializedMessage serialized_msg;
     bool is_converted = factory->ros1_message_instance_to_ros2_serialized_message(
