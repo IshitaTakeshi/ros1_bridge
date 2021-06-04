@@ -71,17 +71,17 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   rosbag::View view(bag_in);
 
-  std::map<std::string, std::string> topic_name_type_map;
+  std::map<std::string, std::string> topic_name_to_type;
 
   // Keys: (string) topic type names
   // Values: (bool) the type has ros2 counterpart (false by default)
   std::map<std::string, bool> has_ros2_type;
 
   for (const rosbag::ConnectionInfo * info : view.getConnections()) {
-    if (hasKey(topic_name_type_map, info->topic)) {
+    if (hasKey(topic_name_to_type, info->topic)) {
       continue;
     }
-    topic_name_type_map.insert(std::make_pair(info->topic, info->datatype));
+    topic_name_to_type.insert(std::make_pair(info->topic, info->datatype));
     // Now add type name to has_ros2_type if it doesn't contain already
     if (hasKey(has_ros2_type, info->datatype)) {
       continue;
@@ -92,16 +92,12 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   {
     std::stringstream ss_topics;
     ss_topics << "Topic name-type pairs in the bag file:" << std::endl;
-    for (const auto & pair_key_value : topic_name_type_map) {
+    for (const auto & pair_key_value : topic_name_to_type) {
       ss_topics << pair_key_value.first << " : " << pair_key_value.second << std::endl;
     }
     ss_topics << std::endl;
     RCLCPP_INFO_STREAM(this->get_logger(), ss_topics.str());
   }
-
-  // check if there are any mappings at all
-
-  // for each of the topic types, check if it has ros2 counterpart
 
   std::map<std::string, std::string> ros1_type_to_ros2_type;
 
@@ -123,7 +119,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     // Print compatible topic name pairs
     std::stringstream ss_convertible_info;
     ss_convertible_info << "Convertible topic name/type mapping information: " << std::endl;
-    for (const auto &[topic_name, topic_type_ros1] : topic_name_type_map) {
+    for (const auto &[topic_name, topic_type_ros1] : topic_name_to_type) {
       const auto & ros2_counterpart_exists = has_ros2_type.at(topic_type_ros1);
       if (!ros2_counterpart_exists) {
         continue;
@@ -145,7 +141,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   using FactoryPtr = std::shared_ptr<ros1_bridge::FactoryInterface>;
   std::map<std::string, FactoryPtr> topic_name_to_factory;
 
-  for (const auto &[topic_name, topic_type_ros1] : topic_name_type_map) {
+  for (const auto &[topic_name, topic_type_ros1] : topic_name_to_type) {
     const auto & ros2_counterpart_exists = has_ros2_type.at(topic_type_ros1);
     if (!ros2_counterpart_exists) {
       continue;
@@ -176,17 +172,15 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   for (rosbag::MessageInstance const & m : view) {
     const auto & topic_name = m.getTopic();
-    const auto & topic_type_ros1 = topic_name_type_map.at(topic_name);
-    const auto & ros2_counterpart_exists = has_ros2_type.at(topic_type_ros1);
-    if (!ros2_counterpart_exists) {
+    const auto & topic_type_ros1 = topic_name_to_type.at(topic_name);
+    if (!has_ros2_type.at(topic_type_ros1)) {
       continue;
     }
     const auto & topic_type_ros2 = ros1_type_to_ros2_type.at(topic_type_ros1);
     FactoryPtr & factory = topic_name_to_factory.at(topic_name);
     rclcpp::SerializedMessage serialized_msg;
     bool is_converted = factory->ros1_message_instance_to_ros2_serialized_message(
-      m,
-      serialized_msg);
+      m, serialized_msg);
 
     if (!is_converted) {
       RCLCPP_ERROR_STREAM(
