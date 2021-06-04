@@ -200,11 +200,11 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     const auto & topic_type_ros2 = map_type_ros1_to_type_ros2.at(topic_type_ros1);
     FactoryPtr & factory = map_topic_name_to_factory.at(topic_name);
     rclcpp::SerializedMessage serialized_msg;
-    bool conversion_is_successful = factory->ros1_message_instance_to_ros2_serialized_message(
+    bool is_converted = factory->ros1_message_instance_to_ros2_serialized_message(
       m,
       serialized_msg);
 
-    if (!conversion_is_successful) {
+    if (!is_converted) {
       RCLCPP_ERROR_STREAM(
         this->get_logger(),
         "Type conversion failed: " << topic_type_ros1 << " to " << topic_type_ros2);
