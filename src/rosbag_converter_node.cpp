@@ -119,14 +119,14 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     // Print compatible topic name pairs
     std::stringstream ss_convertible_info;
     ss_convertible_info << "Convertible topic name/type mapping information: " << std::endl;
-    for (const auto &[topic_name, topic_type_ros1] : topic_name_to_type) {
-      if (!has_ros2_type.at(topic_type_ros1)) {
+    for (const auto &[topic_name, ros1_type] : topic_name_to_type) {
+      if (!has_ros2_type.at(ros1_type)) {
         continue;
       }
-      const auto & topic_type_ros2 = ros1_type_to_ros2_type.at(topic_type_ros1);
+      const auto & ros2_type = ros1_type_to_ros2_type.at(ros1_type);
 
-      ss_convertible_info << topic_name << " : (ROS1) " << topic_type_ros1 << " <=> "
-                          << topic_type_ros2 << " (ROS2)" << std::endl;
+      ss_convertible_info << topic_name << " : (ROS1) " << ros1_type << " <=> "
+                          << ros2_type << " (ROS2)" << std::endl;
     }
     RCLCPP_INFO_STREAM(this->get_logger(), ss_convertible_info.str());
   }
@@ -140,14 +140,12 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   using FactoryPtr = std::shared_ptr<ros1_bridge::FactoryInterface>;
   std::map<std::string, FactoryPtr> topic_name_to_factory;
 
-  for (const auto &[topic_name, topic_type_ros1] : topic_name_to_type) {
-    if (!has_ros2_type.at(topic_type_ros1)) {
+  for (const auto &[topic_name, ros1_type] : topic_name_to_type) {
+    if (!has_ros2_type.at(ros1_type)) {
       continue;
     }
-    const auto & topic_type_ros2 = ros1_type_to_ros2_type.at(topic_type_ros1);
-
-    FactoryPtr factory = ros1_bridge::get_factory(topic_type_ros1, topic_type_ros2);
-    topic_name_to_factory[topic_name] = factory;
+    const auto& ros2_type = ros1_type_to_ros2_type.at(ros1_type);
+    topic_name_to_factory[topic_name] = ros1_bridge::get_factory(ros1_type, ros2_type);
   }
 
   int count_written_proto_files = 0;
@@ -170,11 +168,11 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   for (rosbag::MessageInstance const & m : view) {
     const auto & topic_name = m.getTopic();
-    const auto & topic_type_ros1 = topic_name_to_type.at(topic_name);
-    if (!has_ros2_type.at(topic_type_ros1)) {
+    const auto & ros1_type = topic_name_to_type.at(topic_name);
+    if (!has_ros2_type.at(ros1_type)) {
       continue;
     }
-    const auto & topic_type_ros2 = ros1_type_to_ros2_type.at(topic_type_ros1);
+    const auto & ros2_type = ros1_type_to_ros2_type.at(ros1_type);
     FactoryPtr & factory = topic_name_to_factory.at(topic_name);
     rclcpp::SerializedMessage serialized_msg;
     bool is_converted = factory->ros1_message_instance_to_ros2_serialized_message(
@@ -183,13 +181,13 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     if (!is_converted) {
       RCLCPP_ERROR_STREAM(
         this->get_logger(),
-        "Type conversion failed: " << topic_type_ros1 << " to " << topic_type_ros2);
+        "Type conversion failed: " << ros1_type << " to " << ros2_type);
       continue;
     }
 
     auto proto_message_ptr = proto_rosbag2.add_messages();
     proto_message_ptr->set_topic_name(topic_name);
-    proto_message_ptr->set_topic_type_name(topic_type_ros2);
+    proto_message_ptr->set_topic_type_name(ros2_type);
     proto_message_ptr->set_time_stamp(m.getTime().toNSec());
     proto_message_ptr->set_serialized_data(
       reinterpret_cast<char *>(serialized_msg.
