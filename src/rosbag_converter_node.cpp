@@ -29,6 +29,18 @@ char* messageToData(const rclcpp::SerializedMessage& serialized_msg) {
   );
 }
 
+void addProtobufMessage(rosbag_converter_proto::ProtoRosBag2& proto_rosbag2,
+                        const std::string& topic_name,
+                        const std::string& ros2_type,
+                        const double time_second,
+                        const rclcpp::SerializedMessage& message) {
+  auto proto_message_ptr = proto_rosbag2.add_messages();
+  proto_message_ptr->set_topic_name(topic_name);
+  proto_message_ptr->set_topic_type_name(ros2_type);
+  proto_message_ptr->set_time_stamp(time_second);
+  proto_message_ptr->set_serialized_data(messageToData(message), message.size());
+}
+
 using Correspondence = std::multimap<std::basic_string<char>,
                                      std::basic_string<char>>;
 
@@ -139,11 +151,8 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     }
 
     const auto& ros2_type = topic_name_to_ros2_type.at(topic_name);
-    auto proto_message_ptr = proto_rosbag2.add_messages();
-    proto_message_ptr->set_topic_name(topic_name);
-    proto_message_ptr->set_topic_type_name(ros2_type);
-    proto_message_ptr->set_time_stamp(m.getTime().toNSec());
-    proto_message_ptr->set_serialized_data(messageToData(serialized_msg),  serialized_msg.size());
+    addProtobufMessage(proto_rosbag2, topic_name, ros2_type,
+                       m.getTime().toNSec(), serialized_msg);
 
     if (proto_rosbag2.ByteSizeLong() > std::pow(10, 9)) {
       // Write every 1GB
