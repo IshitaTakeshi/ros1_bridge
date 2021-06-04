@@ -120,10 +120,10 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     std::stringstream ss_convertible_info;
     ss_convertible_info << "Convertible topic name/type mapping information: " << std::endl;
     for (const auto &[topic_name, ros1_type] : topic_name_to_type) {
-      if (!has_ros2_type.at(ros1_type)) {
+      if (!hasKey(ros1_type_to_ros2_type, ros1_type)) {
         continue;
       }
-      const auto & ros2_type = ros1_type_to_ros2_type.at(ros1_type);
+      const auto& ros2_type = ros1_type_to_ros2_type.at(ros1_type);
 
       ss_convertible_info << topic_name << " : (ROS1) " << ros1_type << " <=> "
                           << ros2_type << " (ROS2)" << std::endl;
@@ -141,7 +141,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   std::map<std::string, FactoryPtr> topic_name_to_factory;
 
   for (const auto &[topic_name, ros1_type] : topic_name_to_type) {
-    if (!has_ros2_type.at(ros1_type)) {
+    if (!hasKey(ros1_type_to_ros2_type, ros1_type)) {
       continue;
     }
     const auto& ros2_type = ros1_type_to_ros2_type.at(ros1_type);
@@ -167,13 +167,13 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   };
 
   for (rosbag::MessageInstance const & m : view) {
-    const auto & topic_name = m.getTopic();
-    const auto & ros1_type = topic_name_to_type.at(topic_name);
-    if (!has_ros2_type.at(ros1_type)) {
+    const auto& topic_name = m.getTopic();
+    const auto& ros1_type = topic_name_to_type.at(topic_name);
+    if (!hasKey(ros1_type_to_ros2_type, ros1_type)) {
       continue;
     }
-    const auto & ros2_type = ros1_type_to_ros2_type.at(ros1_type);
-    FactoryPtr & factory = topic_name_to_factory.at(topic_name);
+    const auto& ros2_type = ros1_type_to_ros2_type.at(ros1_type);
+    FactoryPtr& factory = topic_name_to_factory.at(topic_name);
     rclcpp::SerializedMessage serialized_msg;
     bool is_converted = factory->ros1_message_instance_to_ros2_serialized_message(
       m, serialized_msg);
