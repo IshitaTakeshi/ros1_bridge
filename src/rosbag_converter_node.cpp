@@ -46,17 +46,13 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   rosbag::View view(bag_in);
 
-  std::vector<const rosbag::ConnectionInfo *> connection_infos = view.getConnections();
-
-  // Keys: (string) topic names
-  // Values: (string) topic type names
   std::map<std::string, std::string> topic_name_type_map;
 
   // Keys: (string) topic type names
   // Values: (bool) the type has ros2 counterpart (false by default)
   std::map<std::string, bool> has_ros2_type;
 
-  for (const rosbag::ConnectionInfo * info : connection_infos) {
+  for (const rosbag::ConnectionInfo * info : view.getConnections()) {
     bool contains = topic_name_type_map.find(info->topic) != topic_name_type_map.end();
     if (contains) {
       continue;
