@@ -177,19 +177,18 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   rosbag_converter_proto::ProtoRosBag2 proto_rosbag2;
 
-  auto write_to_rosbag2 =
-    [&count_written_proto_files, &proto_rosbag2, path_out, this]() {
-      const std::string path = makeProtobufPath(path_out, count_written_proto_files);
-      std::fstream output(path, std::ios::out | std::ios::trunc | std::ios::binary);
-      if (!proto_rosbag2.SerializeToOstream(&output)) {
-        RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to write serialized bag to disk.");
-        return false;
-      }
-      RCLCPP_INFO_STREAM(this->get_logger(), "File written successfully: " + path);
-      count_written_proto_files++;
-      proto_rosbag2.Clear();
-      return true;
-    };
+  auto write_to_rosbag2 = [&count_written_proto_files, &proto_rosbag2, path_out, this]() {
+    const std::string path = makeProtobufPath(path_out, count_written_proto_files);
+    std::fstream output(path, std::ios::out | std::ios::trunc | std::ios::binary);
+    if (!proto_rosbag2.SerializeToOstream(&output)) {
+      RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to write serialized bag to disk.");
+      return false;
+    }
+    RCLCPP_INFO_STREAM(this->get_logger(), "File written successfully: " + path);
+    count_written_proto_files++;
+    proto_rosbag2.Clear();
+    return true;
+  };
 
   for (rosbag::MessageInstance const & m : view) {
     const auto & topic_name = m.getTopic();
