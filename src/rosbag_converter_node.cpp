@@ -54,15 +54,16 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   std::map<std::string, bool> map_type_has_ros2_version;
 
   for (const rosbag::ConnectionInfo * info : connection_infos) {
-    bool doesnt_contain = topic_name_type_map.find(info->topic) == topic_name_type_map.end();
-    if (doesnt_contain) {
-      topic_name_type_map.insert(std::make_pair(info->topic, info->datatype));
-      // Now add type name to map_type_has_ros2_version if it doesn't contain already
-      bool doesnt_contain_map2 = map_type_has_ros2_version.find(info->datatype) ==
-        map_type_has_ros2_version.end();
-      if (doesnt_contain_map2) {
-        map_type_has_ros2_version.insert(std::make_pair(info->datatype, false));
-      }
+    bool contains = topic_name_type_map.find(info->topic) != topic_name_type_map.end();
+    if (contains) {
+      continue;
+    }
+    topic_name_type_map.insert(std::make_pair(info->topic, info->datatype));
+    // Now add type name to map_type_has_ros2_version if it doesn't contain already
+    bool doesnt_contain_map2 = map_type_has_ros2_version.find(info->datatype) ==
+      map_type_has_ros2_version.end();
+    if (doesnt_contain_map2) {
+      map_type_has_ros2_version.insert(std::make_pair(info->datatype, false));
     }
   }
 
