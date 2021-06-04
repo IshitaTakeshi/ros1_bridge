@@ -72,14 +72,12 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   std::map<std::string, bool> has_ros2_type;
 
   for (const rosbag::ConnectionInfo * info : view.getConnections()) {
-    bool contains = topic_name_type_map.find(info->topic) != topic_name_type_map.end();
-    if (contains) {
+    if (hasKey(topic_name_type_map, info->topic)) {
       continue;
     }
     topic_name_type_map.insert(std::make_pair(info->topic, info->datatype));
     // Now add type name to has_ros2_type if it doesn't contain already
-    contains = has_ros2_type.find(info->datatype) != has_ros2_type.end();
-    if (contains) {
+    if (hasKey(has_ros2_type, info->datatype)) {
       continue;
     }
     has_ros2_type.insert(std::make_pair(info->datatype, false));

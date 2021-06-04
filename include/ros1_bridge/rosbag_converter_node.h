@@ -33,6 +33,10 @@
 
 #include "std_msgs/msg/string.hpp"
 
+template <class K, class V>
+bool hasKey(const std::map<K, V>& map, const K& key) {
+  return map.find(key) != map.end();
+}
 
 class RosbagConverterNode: public rclcpp::Node
 {
