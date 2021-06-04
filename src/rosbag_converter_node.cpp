@@ -73,29 +73,19 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   std::map<std::string, std::string> topic_name_to_type;
 
-  // Keys: (string) topic type names
-  // Values: (bool) the type has ros2 counterpart (false by default)
-  std::map<std::string, bool> has_ros2_type;
-
   for (const rosbag::ConnectionInfo * info : view.getConnections()) {
     if (hasKey(topic_name_to_type, info->topic)) {
       continue;
     }
     topic_name_to_type[info->topic] = info->datatype;
-    // Now add type name to has_ros2_type if it doesn't contain already
-    if (hasKey(has_ros2_type, info->datatype)) {
-      continue;
-    }
-    has_ros2_type[info->datatype] = false;
   }
 
   std::map<std::string, std::string> ros1_type_to_ros2_type;
 
-  for (auto & [type_name, _] : has_ros2_type) {
+  for (auto& [_, type_name] : topic_name_to_type) {
     std::string ros_type_name;
     const bool ros2_type_exists = ros1_bridge::get_1to2_mapping(type_name, ros_type_name);
-    has_ros2_type[type_name] = ros2_type_exists;
-    if (!has_ros2_type[type_name]) {
+    if (!ros2_type_exists) {
       continue;
     }
     ros1_type_to_ros2_type[type_name] = ros_type_name;
