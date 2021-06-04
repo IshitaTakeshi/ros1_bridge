@@ -86,17 +86,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     if (hasKey(has_ros2_type, info->datatype)) {
       continue;
     }
-    has_ros2_type.insert(std::make_pair(info->datatype, false));
-  }
-
-  {
-    std::stringstream ss_topics;
-    ss_topics << "Topic name-type pairs in the bag file:" << std::endl;
-    for (const auto & pair_key_value : topic_name_to_type) {
-      ss_topics << pair_key_value.first << " : " << pair_key_value.second << std::endl;
-    }
-    ss_topics << std::endl;
-    RCLCPP_INFO_STREAM(this->get_logger(), ss_topics.str());
+    has_ros2_type[info->datatype] = false;
   }
 
   std::map<std::string, std::string> ros1_type_to_ros2_type;
