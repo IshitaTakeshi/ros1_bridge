@@ -74,7 +74,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   using FactoryPtr = std::shared_ptr<ros1_bridge::FactoryInterface>;
 
   std::map<std::string, std::string> topic_name_to_type;
-  std::map<std::string, std::string> ros1_type_to_ros2_type;
+  std::map<std::string, std::string> topic_name_to_ros2_type;
   std::map<std::string, FactoryPtr> topic_name_to_factory;
 
   for (const rosbag::ConnectionInfo * info : view.getConnections()) {
@@ -89,11 +89,11 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     if (!ros1_bridge::get_1to2_mapping(ros1_type, ros2_type)) {
       continue;
     }
-    ros1_type_to_ros2_type[ros1_type] = ros2_type;
+    topic_name_to_ros2_type[topic_name] = ros2_type;
     topic_name_to_factory[topic_name] = ros1_bridge::get_factory(ros1_type, ros2_type);
   }
 
-  if (ros1_type_to_ros2_type.empty()) {
+  if (topic_name_to_factory.empty()) {
     RCLCPP_ERROR_STREAM(this->get_logger(),
                         "None of the types in the bag file are convertible to ROS2.");
   }
@@ -118,20 +118,18 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   for (rosbag::MessageInstance const & m : view) {
     const auto& topic_name = m.getTopic();
-    const auto& ros1_type = topic_name_to_type.at(topic_name);
-    if (!hasKey(ros1_type_to_ros2_type, ros1_type)) {
+    if (!hasKey(topic_name_to_factory, topic_name)) {
       continue;
     }
-    const auto& ros2_type = ros1_type_to_ros2_type.at(ros1_type);
+    const auto& ros2_type = topic_name_to_ros2_type.at(topic_name);
     FactoryPtr& factory = topic_name_to_factory.at(topic_name);
     rclcpp::SerializedMessage serialized_msg;
     bool is_converted = factory->ros1_message_instance_to_ros2_serialized_message(
       m, serialized_msg);
 
     if (!is_converted) {
-      RCLCPP_ERROR_STREAM(
-        this->get_logger(),
-        "Type conversion failed: " << ros1_type << " to " << ros2_type);
+      RCLCPP_ERROR_STREAM(this->get_logger(),
+                          "Type conversion failed: " << topic_name);
       continue;
     }
 
