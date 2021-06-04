@@ -119,19 +119,15 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     // Print compatible topic name pairs
     std::stringstream ss_convertible_info;
     ss_convertible_info << "Convertible topic name/type mapping information: " << std::endl;
-    for (const auto & pair_key_value : topic_name_type_map) {
-      const auto & topic_name = pair_key_value.first;
-      const auto & topic_type_ros1 = pair_key_value.second;
+    for (const auto &[topic_name, topic_type_ros1] : topic_name_type_map) {
       const auto & ros2_counterpart_exists = has_ros2_type.at(topic_type_ros1);
       if (!ros2_counterpart_exists) {
         continue;
       }
       const auto & topic_type_ros2 = ros1_type_to_ros2_type.at(topic_type_ros1);
 
-      ss_convertible_info <<
-        topic_name << " : (ROS1) " <<
-        topic_type_ros1 << " <=> " <<
-        topic_type_ros2 << " (ROS2)" << std::endl;
+      ss_convertible_info << topic_name << " : (ROS1) " << topic_type_ros1 << " <=> "
+                          << topic_type_ros2 << " (ROS2)" << std::endl;
     }
     RCLCPP_INFO_STREAM(this->get_logger(), ss_convertible_info.str());
   }
@@ -145,9 +141,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   using FactoryPtr = std::shared_ptr<ros1_bridge::FactoryInterface>;
   std::map<std::string, FactoryPtr> topic_name_to_factory;
 
-  for (const auto & pair_key_value : topic_name_type_map) {
-    const auto & topic_name = pair_key_value.first;
-    const auto & topic_type_ros1 = pair_key_value.second;
+  for (const auto &[topic_name, topic_type_ros1] : topic_name_type_map) {
     const auto & ros2_counterpart_exists = has_ros2_type.at(topic_type_ros1);
     if (!ros2_counterpart_exists) {
       continue;
