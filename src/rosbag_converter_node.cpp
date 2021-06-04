@@ -1,5 +1,6 @@
 #include "ros1_bridge/rosbag_converter_node.h"
 #include "rclcpp/logger.hpp"
+#include <cmath>
 #include <map>
 #include <vector>
 #include <sstream>
@@ -157,16 +158,6 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     topic_name_to_factory.insert(std::make_pair(topic_name, factory));
   }
 
-  // Simple x^n (integer^integer) exponent function
-  auto pow_ul = [](uint64_t x, uint32_t n)
-    {
-      uint64_t y = 1UL;
-      for (uint32_t i = 0; i < n; i++) {
-        y *= x;
-      }
-      return y;
-    };
-
   int count_written_proto_files = 0;
 
   GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -214,7 +205,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
       reinterpret_cast<char *>(serialized_msg.
       get_rcl_serialized_message().buffer), serialized_msg.size());
 
-    if (proto_rosbag2.ByteSizeLong() > pow_ul(10, 9)) {
+    if (proto_rosbag2.ByteSizeLong() > std::pow(10, 9)) {
       // Write every 1GB
       // Name them as file_name.proto_rosbag2_000, file_name.proto_rosbag2_001, ...
       if (!write_to_rosbag2()) {
