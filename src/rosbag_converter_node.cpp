@@ -45,8 +45,11 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
       "/rosbag_converter_test",
       10)}
 {
-  const std::string path_in = rclcpp::Node::declare_parameter("path_in_ros1_bag_file").get<std::string>();
-  const std::string path_out = rclcpp::Node::declare_parameter("path_out_ros2_serialized_binary").get<std::string>();
+
+  const std::string path_in_arg = "path_in_ros1_bag_file";
+  const std::string path_out_arg = "path_out_ros2_serialized_binary";
+  const std::string path_in = rclcpp::Node::declare_parameter(path_in_arg).get<std::string>();
+  const std::string path_out = rclcpp::Node::declare_parameter(path_out_arg).get<std::string>();
 
   std::stringstream ss_input_args;
   ss_input_args << "Input args: " << std::endl;
