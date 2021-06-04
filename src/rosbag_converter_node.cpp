@@ -84,10 +84,10 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   {
     std::stringstream ss_topic_mapping;
     ss_topic_mapping << "Supported ROS 2 <=> ROS 1 message type conversion pairs:" << std::endl;
-    for (auto & pair : mappings_2to1) {
-      ss_topic_mapping << "  - " <<
-        pair.first << " (ROS 2) <=> " <<
-        pair.second.c_str() << " (ROS 1)" << std::endl;
+    for (auto & [ros1_type, ros2_type] : mappings_2to1) {
+      ss_topic_mapping << "  - "
+          << ros1_type << " (ROS 1) <=> "
+          << ros2_type << " (ROS 2)" << std::endl;
     }
     ss_topic_mapping << std::endl;
     RCLCPP_INFO_STREAM(this->get_logger(), ss_topic_mapping.str());
