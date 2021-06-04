@@ -16,6 +16,12 @@
 #include <iostream>
 #include <fstream>
 
+std::string makeProtobufPath(const std::string& path_out, const int count_written_proto_files) {
+  std::string str_count_raw = std::to_string(count_written_proto_files);
+  std::string str_count_with_leading_zeros = "_" + std::string(3 - str_count_raw.length(), '0') + str_count_raw;
+  return path_out + str_count_with_leading_zeros;
+}
+
 RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 : Node("rosbag_converter_node", options),
   pub_ptr_string_test_{this->create_publisher<std_msgs::msg::String>(
@@ -173,15 +179,13 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   auto write_to_rosbag2 =
     [&count_written_proto_files, &proto_rosbag2, path_out, this]() {
-      std::string str_count_raw = std::to_string(count_written_proto_files);
-      std::string str_count_with_leading_zeros = "_" + std::string(3 - str_count_raw.length(), '0') + str_count_raw;
-      std::string str_file_name = path_out + str_count_with_leading_zeros;
-      std::fstream output(str_file_name, std::ios::out | std::ios::trunc | std::ios::binary);
+      const std::string path = makeProtobufPath(path_out, count_written_proto_files);
+      std::fstream output(path, std::ios::out | std::ios::trunc | std::ios::binary);
       if (!proto_rosbag2.SerializeToOstream(&output)) {
         RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to write serialized bag to disk.");
         return false;
       }
-      RCLCPP_INFO_STREAM(this->get_logger(), "File written successfully: " + str_file_name);
+      RCLCPP_INFO_STREAM(this->get_logger(), "File written successfully: " + path);
       count_written_proto_files++;
       proto_rosbag2.Clear();
       return true;
