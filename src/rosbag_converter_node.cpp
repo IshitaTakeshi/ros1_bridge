@@ -91,17 +91,12 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   using FactoryPtr = std::shared_ptr<ros1_bridge::FactoryInterface>;
 
-  std::map<std::string, std::string> topic_name_to_type;
   std::map<std::string, std::string> topic_name_to_ros2_type;
   std::map<std::string, FactoryPtr> topic_name_to_factory;
 
   for (const rosbag::ConnectionInfo * info : view.getConnections()) {
     const std::string topic_name = info->topic;
-    if (hasKey(topic_name_to_type, topic_name)) {
-      continue;
-    }
     const std::string ros1_type = info->datatype;
-    topic_name_to_type[topic_name] = ros1_type;
 
     std::string ros2_type;
     if (!ros1_bridge::get_1to2_mapping(ros1_type, ros2_type)) {
@@ -139,10 +134,9 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     if (!hasKey(topic_name_to_factory, topic_name)) {
       continue;
     }
-    FactoryPtr& factory = topic_name_to_factory.at(topic_name);
+    FactoryPtr& f = topic_name_to_factory.at(topic_name);
     rclcpp::SerializedMessage serialized_msg;
-    bool is_converted = factory->ros1_message_instance_to_ros2_serialized_message(
-      m, serialized_msg);
+    bool is_converted = f->ros1_message_instance_to_ros2_serialized_message(m, serialized_msg);
 
     if (!is_converted) {
       RCLCPP_ERROR_STREAM(this->get_logger(),
