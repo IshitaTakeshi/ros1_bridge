@@ -23,8 +23,11 @@ std::string makeProtobufPath(const std::string& path_out, const int count_writte
   return path_out + str_count_with_leading_zeros;
 }
 
+using Correspondence = std::multimap<std::basic_string<char>,
+                                     std::basic_string<char>>;
+
 void printTypeCorrespondences(const rclcpp::Logger& logger,
-                              const std::multimap<std::basic_string<char>, std::basic_string<char>>& mappings_2to1) {
+                              const Correspondence& mappings_2to1) {
   std::stringstream ss_topic_mapping;
   ss_topic_mapping << "Supported ROS 2 <=> ROS 1 message type conversion pairs:" << std::endl;
   for (auto & [ros1_type, ros2_type] : mappings_2to1) {
