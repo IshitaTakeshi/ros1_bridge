@@ -81,7 +81,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     if (hasKey(topic_name_to_type, info->topic)) {
       continue;
     }
-    topic_name_to_type.insert(std::make_pair(info->topic, info->datatype));
+    topic_name_to_type[info->topic] = info->datatype;
     // Now add type name to has_ros2_type if it doesn't contain already
     if (hasKey(has_ros2_type, info->datatype)) {
       continue;
@@ -95,10 +95,10 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     std::string ros_type_name;
     const bool ros2_type_exists = ros1_bridge::get_1to2_mapping(type_name, ros_type_name);
     has_ros2_type[type_name] = ros2_type_exists;
-    if (!ros2_type_exists) {
+    if (!has_ros2_type[type_name]) {
       continue;
     }
-    ros1_type_to_ros2_type.insert(std::make_pair(type_name, ros_type_name));
+    ros1_type_to_ros2_type[type_name] = ros_type_name;
   }
   if (ros1_type_to_ros2_type.empty()) {
     RCLCPP_ERROR_STREAM(this->get_logger(),
