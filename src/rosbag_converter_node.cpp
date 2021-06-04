@@ -82,25 +82,18 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   std::map<std::string, std::string> ros1_type_to_ros2_type;
 
-  for (auto& [_, type_name] : topic_name_to_type) {
-    std::string ros_type_name;
-    const bool ros2_type_exists = ros1_bridge::get_1to2_mapping(type_name, ros_type_name);
-    if (!ros2_type_exists) {
+  for (auto& [_, ros1_type] : topic_name_to_type) {
+    std::string ros2_type;
+    if (!ros1_bridge::get_1to2_mapping(ros1_type, ros2_type)) {
       continue;
     }
-    ros1_type_to_ros2_type[type_name] = ros_type_name;
+    ros1_type_to_ros2_type[ros1_type] = ros2_type;
   }
   if (ros1_type_to_ros2_type.empty()) {
     RCLCPP_ERROR_STREAM(this->get_logger(),
                         "None of the types in the bag file are convertible to ROS2.");
   }
 
-  // Now we know supported topic names, their ROS1 types and ROS2 counterpart type names.
-
-  // Let's create the factory instances for these topics.
-
-  // Key: topic name
-  // Value: factory instance
   using FactoryPtr = std::shared_ptr<ros1_bridge::FactoryInterface>;
   std::map<std::string, FactoryPtr> topic_name_to_factory;
 
