@@ -71,38 +71,31 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   rosbag::View view(bag_in);
 
+  using FactoryPtr = std::shared_ptr<ros1_bridge::FactoryInterface>;
+
   std::map<std::string, std::string> topic_name_to_type;
+  std::map<std::string, std::string> ros1_type_to_ros2_type;
+  std::map<std::string, FactoryPtr> topic_name_to_factory;
 
   for (const rosbag::ConnectionInfo * info : view.getConnections()) {
-    if (hasKey(topic_name_to_type, info->topic)) {
+    const std::string topic_name = info->topic;
+    if (hasKey(topic_name_to_type, topic_name)) {
       continue;
     }
-    topic_name_to_type[info->topic] = info->datatype;
-  }
+    const std::string ros1_type = info->datatype;
+    topic_name_to_type[topic_name] = ros1_type;
 
-  std::map<std::string, std::string> ros1_type_to_ros2_type;
-
-  for (auto& [_, ros1_type] : topic_name_to_type) {
     std::string ros2_type;
     if (!ros1_bridge::get_1to2_mapping(ros1_type, ros2_type)) {
       continue;
     }
     ros1_type_to_ros2_type[ros1_type] = ros2_type;
+    topic_name_to_factory[topic_name] = ros1_bridge::get_factory(ros1_type, ros2_type);
   }
+
   if (ros1_type_to_ros2_type.empty()) {
     RCLCPP_ERROR_STREAM(this->get_logger(),
                         "None of the types in the bag file are convertible to ROS2.");
-  }
-
-  using FactoryPtr = std::shared_ptr<ros1_bridge::FactoryInterface>;
-  std::map<std::string, FactoryPtr> topic_name_to_factory;
-
-  for (const auto &[topic_name, ros1_type] : topic_name_to_type) {
-    if (!hasKey(ros1_type_to_ros2_type, ros1_type)) {
-      continue;
-    }
-    const auto& ros2_type = ros1_type_to_ros2_type.at(ros1_type);
-    topic_name_to_factory[topic_name] = ros1_bridge::get_factory(ros1_type, ros2_type);
   }
 
   int count_written_proto_files = 0;
