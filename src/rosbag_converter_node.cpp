@@ -51,7 +51,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   // Keys: (string) topic type names
   // Values: (bool) the type has ros2 counterpart (false by default)
-  std::map<std::string, bool> map_type_has_ros2_version;
+  std::map<std::string, bool> has_ros2_type;
 
   for (const rosbag::ConnectionInfo * info : connection_infos) {
     bool contains = topic_name_type_map.find(info->topic) != topic_name_type_map.end();
@@ -59,12 +59,12 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
       continue;
     }
     topic_name_type_map.insert(std::make_pair(info->topic, info->datatype));
-    // Now add type name to map_type_has_ros2_version if it doesn't contain already
-    contains = map_type_has_ros2_version.find(info->datatype) != map_type_has_ros2_version.end();
+    // Now add type name to has_ros2_type if it doesn't contain already
+    contains = has_ros2_type.find(info->datatype) != has_ros2_type.end();
     if (contains) {
       continue;
     }
-    map_type_has_ros2_version.insert(std::make_pair(info->datatype, false));
+    has_ros2_type.insert(std::make_pair(info->datatype, false));
   }
 
   {
@@ -100,7 +100,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
 
   std::map<std::string, std::string> map_type_ros1_to_type_ros2;
 
-  for (auto & pair_key_value : map_type_has_ros2_version) {
+  for (auto & pair_key_value : has_ros2_type) {
     const auto & type_name = pair_key_value.first;
     bool & ros2_counterpart_exists = pair_key_value.second;
     std::string type_name_ros2;
@@ -122,7 +122,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
     for (const auto & pair_key_value : topic_name_type_map) {
       const auto & topic_name = pair_key_value.first;
       const auto & topic_type_ros1 = pair_key_value.second;
-      const auto & ros2_counterpart_exists = map_type_has_ros2_version.at(topic_type_ros1);
+      const auto & ros2_counterpart_exists = has_ros2_type.at(topic_type_ros1);
       if (!ros2_counterpart_exists) {
         continue;
       }
@@ -148,7 +148,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   for (const auto & pair_key_value : topic_name_type_map) {
     const auto & topic_name = pair_key_value.first;
     const auto & topic_type_ros1 = pair_key_value.second;
-    const auto & ros2_counterpart_exists = map_type_has_ros2_version.at(topic_type_ros1);
+    const auto & ros2_counterpart_exists = has_ros2_type.at(topic_type_ros1);
     if (!ros2_counterpart_exists) {
       continue;
     }
@@ -198,7 +198,7 @@ RosbagConverterNode::RosbagConverterNode(const rclcpp::NodeOptions & options)
   for (rosbag::MessageInstance const & m : view) {
     const auto & topic_name = m.getTopic();
     const auto & topic_type_ros1 = topic_name_type_map.at(topic_name);
-    const auto & ros2_counterpart_exists = map_type_has_ros2_version.at(topic_type_ros1);
+    const auto & ros2_counterpart_exists = has_ros2_type.at(topic_type_ros1);
     if (!ros2_counterpart_exists) {
       continue;
     }
